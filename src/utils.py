@@ -16,7 +16,7 @@ def crop_center(image):
   return image
 
 @functools.lru_cache(maxsize=None)
-def st_load(image_path, image_size=(256, 256), preserve_aspect_ratio=True):
+def st_load(image_path, image_size=(256, 256)):
   """Loads and preprocesses images."""
   # Load and convert to float32 numpy array, add batch dimension, and normalize to range [0, 1].
   img = plt.imread(image_path).astype(np.float32)[np.newaxis, ...]
@@ -31,20 +31,23 @@ def st_load(image_path, image_size=(256, 256), preserve_aspect_ratio=True):
     img = img[:,:,:,:3]
   return img
 
-def show_n(images, titles=('',)):
-  n = len(images)
-  image_sizes = [image.shape[1] for image in images]
-  w = (image_sizes[0] * 6) // 320
-  plt.figure(figsize=(w  * n, w))
-  gs = gridspec.GridSpec(1, n, width_ratios=image_sizes)
-  for i in range(n):
-    plt.subplot(gs[i])
-    plt.imshow(images[i][0], aspect='equal')
-    plt.axis('off')
-    plt.title(titles[i] if len(titles) > i else '')
-  plt.show()
+# image plotting function
+def plot_imgs(images, fname):
+    titles = ['content', 'style', 'stylized']
 
-# plotting function
+    plt.style.use('seaborn-white')
+
+    fig, axs = plt.subplots(nrows=1, ncols=3, figsize=(9,3))
+    for i, ax in enumerate(axs.flatten()):
+        plt.sca(ax)
+        plt.imshow(images[i])
+        plt.axis('off')
+        plt.title(f"{titles[i]}")
+
+    plt.tight_layout()
+    plt.savefig(os.path.join("..","out",fname))
+
+# history plotting function
 def plot_history(H, epochs, title):
     plt.style.use("seaborn-colorblind")
 

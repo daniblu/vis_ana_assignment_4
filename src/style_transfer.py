@@ -1,4 +1,3 @@
-# IMPORTING PACKAGES
 print("[INFO]: Importing packages")
 # general tools
 import os
@@ -7,7 +6,7 @@ import argparse
 import tensorflow as tf
 
 # data loading
-from utils import (st_load, crop_center, plot_history)
+from utils import (st_load, crop_center, plot_imgs, plot_history)
 from tensorflow.keras.datasets import cifar10
 
 # image processsing
@@ -90,9 +89,14 @@ def main(style, flip_shift):
         X_train = np.concatenate((X_train, stylized_X_train))
         y_train = np.concatenate((y_train, y_train))
 
-        # SAVE FIGURE OF STYLE TRANSFER EXAMPLES
+        # Save figure of style transfer examples
+        style_trim = style.replace(".png","")
+        plot_imgs(images=[X_train[0], np.array(style_img[0]), X_train[10000]],
+                  fname=f"{style_trim}_cat.png")
+        plot_imgs(images=[X_train[5000], np.array(style_img[0]), X_train[15000]],
+                  fname=f"{style_trim}_dog.png")
 
-    # One-hot encode labels
+    # Make labels into 0s (cat) and 1s (dog)
     lb = LabelBinarizer()
     y_train = lb.fit_transform(y_train)
     y_test = lb.fit_transform(y_test)
@@ -127,9 +131,9 @@ def main(style, flip_shift):
     # Add new classifier layers
     flat1 = Flatten()(model.layers[-1].output)
     bn = BatchNormalization()(flat1)
-    class1 = Dense(256, 
+    class1 = Dense(128, 
                 activation='relu')(bn)
-    class2 = Dense(128, 
+    class2 = Dense(64, 
                 activation='relu')(class1)
     output = Dense(1, 
                 activation='sigmoid')(class2)
@@ -167,7 +171,6 @@ def main(style, flip_shift):
     
     # Save model and history plot
     if style != None:
-        style_trim = style.replace(".png","")
         model_name = f"style_{style_trim}"
         plot_name = f"history_style_{style}"
     elif flip_shift:
@@ -191,10 +194,10 @@ def main(style, flip_shift):
     # Save classification report
     label_names = ['Cat', 'Dog']
     report = classification_report(y_test.flatten(),
-                        predictions.flatten(),
-                        target_names=label_names) 
+                                predictions.flatten(),
+                                target_names=label_names) 
 
-    txtpath = os.path.join("..", "reports", f"model_{model_name}_classification_report.txt")
+    txtpath = os.path.join("..", "out", f"model_{model_name}_clf_report.txt")
     with open(txtpath, "w") as file:
         file.write(report) 
 
