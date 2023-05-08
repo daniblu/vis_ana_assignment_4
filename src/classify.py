@@ -164,7 +164,7 @@ def main(style, flip_shift):
     print("[INFO]: Model training")
     H = model.fit(train_generator.flow(X_train, y_train, batch_size=batch_size_train, subset='training'), 
             validation_data = train_generator.flow(X_train, y_train, batch_size=batch_size_val, subset = "validation"),
-            epochs=1,
+            epochs=10,
             verbose=1)
     
     # Save model and history plot
@@ -181,7 +181,7 @@ def main(style, flip_shift):
     model_path = os.path.join("..","models",f"model_{model_name}.SavedModel")
     model.save(model_path)
     
-    plot_history(H, epochs=1, title=plot_name)
+    plot_history(H, epochs=10, title=plot_name)
 
     # Predict
     print("[INFO]: Predicting")
