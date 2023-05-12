@@ -6,8 +6,8 @@ import argparse
 import tensorflow as tf
 
 # data loading
-from utils import (load_style_img, crop_resize, plot_imgs, plot_history)
-from tensorflow.keras.datasets import cifar10
+from utils import (load_style_img, crop_resize, get_relpaths, plot_imgs, plot_history)
+import matplotlib.pyplot as plt
 
 # image processsing
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -48,18 +48,28 @@ def input_parse():
 def main(style, flip_shift):
     
     # Load data
-    print("[INFO]: Loading cifar10")
-    ((X_train, y_train), (X_test, y_test)) = cifar10.load_data()
+    print("[INFO]: Loading data")
+    train_cat_paths = get_relpaths(sub="training_set", subsub="cats")
+    train_dog_paths = get_relpaths(sub="training_set", subsub="dogs")
+    test_cat_paths = get_relpaths(sub="test_set", subsub="cats")
+    test_dog_paths = get_relpaths(sub="test_set", subsub="dogs")
 
-    # Subset cats and dogs
-    X_train = X_train[np.isin(y_train, [3,5]).flatten()]
-    y_train = y_train[np.isin(y_train, [3,5]).flatten()]
-    X_test = X_test[np.isin(y_test, [3,5]).flatten()]
-    y_test = y_test[np.isin(y_test, [3,5]).flatten()]
+    X_train_cat = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in train_cat_paths])
+    X_train_dog = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in train_dog_paths])
+    X_test_cat = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in test_cat_paths])
+    X_test_dog = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in test_dog_paths])
+
+    # Concatenate arrays
+    X_train = np.concatenate(X_train_cat, X_train_dog)
+    X_test = np.concatenate(X_test_cat, X_test_dog)
 
     # Normalize
     X_train = X_train.astype(np.float32) / 255.
     X_test = X_test.astype(np.float32) / 255.
+
+    # Make y labels, cat = 0, dog = 1
+    y_train = [0 for n in range(len(X_train_cat))] + [1 for n in range(len(X_train_dog))]
+    y_test = [0 for n in range(len(X_test_cat))] + [1 for n in range(len(X_test_dog))]
 
     if style != None:
 
@@ -88,19 +98,14 @@ def main(style, flip_shift):
 
         # Combine
         X_train = np.concatenate((X_train, stylized_X_train))
-        y_train = np.concatenate((y_train, y_train))
+        y_train = y_train + y_train
 
         # Save figure of style transfer examples
         style_trim = style.replace(".png","")
-        plot_imgs(images=[X_train[0], np.array(style_img[0]), X_train[10000]],
-                  fname=f"cifar_{style_trim}_cat.png")
-        plot_imgs(images=[X_train[7001], np.array(style_img[0]), X_train[17001]],
-                  fname=f"cifar_{style_trim}_dog.png")
-
-    # Make labels into 0s (cat) and 1s (dog)
-    lb = LabelBinarizer()
-    y_train = lb.fit_transform(y_train)
-    y_test = lb.fit_transform(y_test)
+        plot_imgs(images=[X_train[0], np.array(style_img[0]), X_train[8000]],
+                  fname=f"{style_trim}_cat.png")
+        plot_imgs(images=[X_train[4000], np.array(style_img[0]), X_train[12000]],
+                  fname=f"{style_trim}_dog.png")
     
     # Define image data generators
     if flip_shift:
@@ -120,8 +125,7 @@ def main(style, flip_shift):
 
     # Load model without classifier layers
     model = VGG16(include_top=False, 
-                pooling='avg',
-                input_shape=(32, 32, 3))
+                pooling='avg')
 
     # Mark loaded layers as not trainable
     for layer in model.layers:
@@ -152,7 +156,7 @@ def main(style, flip_shift):
     model.compile(optimizer=sgd,
                 loss='binary_crossentropy',
                 metrics=['accuracy'])
-
+    
     # Define appropriate batch sizes
     if flip_shift:
         batch_size_train = 32
@@ -170,14 +174,14 @@ def main(style, flip_shift):
     
     # Save model and history plot
     if style != None:
-        model_name = f"cifar_style_{style_trim}"
-        plot_name = f"history_cifar_style_{style}"
+        model_name = f"style_{style_trim}"
+        plot_name = f"history_style_{style}"
     elif flip_shift:
-        model_name = "cifar_flip_shift"
-        plot_name = "history_cifar_flip_shift.png"
+        model_name = "flip_shift"
+        plot_name = "history_flip_shift_aug.png"
     else: 
-        model_name = "cifar_no_aug"
-        plot_name = "history_cifar_no_aug.png"
+        model_name = "no_aug"
+        plot_name = "history_no_aug.png"
     
     model_path = os.path.join("..","models",f"model_{model_name}.SavedModel")
     model.save(model_path)

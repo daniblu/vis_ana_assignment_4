@@ -5,7 +5,7 @@ import matplotlib.pylab as plt
 import tensorflow as tf
 import numpy as np
 
-def crop_center(image):
+def crop_resize(image, image_size=(256, 256)):
   """Returns a cropped square image."""
   shape = image.shape
   new_shape = min(shape[1], shape[2])
@@ -13,10 +13,11 @@ def crop_center(image):
   offset_x = max(shape[2] - shape[1], 0) // 2
   image = tf.image.crop_to_bounding_box(
       image, offset_y, offset_x, new_shape, new_shape)
+  image = tf.image.resize(image, image_size, preserve_aspect_ratio=True)
   return image
 
 @functools.lru_cache(maxsize=None)
-def st_load(image_path, image_size=(256, 256)):
+def load_style_img(image_path):
   """Loads and preprocesses images."""
   # Load and convert to float32 numpy array, add batch dimension, and normalize to range [0, 1].
   img = plt.imread(image_path).astype(np.float32)[np.newaxis, ...]
@@ -24,12 +25,17 @@ def st_load(image_path, image_size=(256, 256)):
     img = img / 255.
   if len(img.shape) == 3:
     img = tf.stack([img, img, img], axis=-1)
-  img = crop_center(img)
-  img = tf.image.resize(img, image_size, preserve_aspect_ratio=True)
   # remove alpha-layer from .png
   if image_path[-4:] == '.png':
     img = img[:,:,:,:3]
   return img
+
+def get_relpaths(sub="training_set", subsub="cats"):
+  dir = os.path.join("..","in","dataset",sub,subsub)
+  files = os.listdir(dir)
+  relpaths = [os.path.relpath(os.path.join(dir, file)) for file in files]
+   
+  return relpaths
 
 # image plotting function
 def plot_imgs(images, fname):
