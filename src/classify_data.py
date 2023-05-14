@@ -18,6 +18,7 @@ import tensorflow_hub as hub
 
 #scikit-learn
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.utils import shuffle
 from sklearn.metrics import classification_report
 
 # terminal parsing function
@@ -92,6 +93,10 @@ def main(style, flip_shift):
         plot_imgs(images=[X_train[4000], np.array(style_img[0]), X_train[12000]],
                   fname=f"{style_trim}_dog.png")
     
+    # Shuffle data
+    X_train, y_train = shuffle(X_train, y_train)
+    X_test, y_test = shuffle(X_test, y_test)
+
     # Define image data generators
     if flip_shift:
         train_generator = ImageDataGenerator(horizontal_flip=True,
@@ -112,19 +117,25 @@ def main(style, flip_shift):
     model = build_model()
     
     # Define appropriate batch sizes
-    if flip_shift:
-        batch_size_train = 32
-        batch_size_val = 8
-    else: 
+    if style != None:
         batch_size_train = 64
         batch_size_val = 16
+    else:
+        batch_size_train = 32
+        batch_size_val = 8 
 
     # Fit model
     print("[INFO]: Model training")
-    H = model.fit(train_generator.flow(X_train, y_train, batch_size=batch_size_train, subset='training'), 
-            validation_data = train_generator.flow(X_train, y_train, batch_size=batch_size_val, subset = "validation"),
-            epochs=10,
-            verbose=1)
+    H = model.fit(train_generator.flow(X_train, y_train, 
+                                       batch_size=batch_size_train, 
+                                       subset='training', 
+                                       seed=5), 
+                  validation_data = train_generator.flow(X_train, y_train, 
+                                                        batch_size=batch_size_val, 
+                                                        subset = "validation", 
+                                                        seed=5),
+                  epochs=10,
+                  verbose=1)
     
     # Save model and history plot
     if style != None:

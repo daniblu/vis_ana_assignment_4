@@ -107,13 +107,13 @@ def main(style, flip_shift):
     model = build_model()
 
     # Define appropriate batch sizes
-    if flip_shift:
-        batch_size_train = 32
-        batch_size_val = 8
-    else: 
+    if style != None:
         batch_size_train = 64
         batch_size_val = 16
-
+    else:
+        batch_size_train = 32
+        batch_size_val = 8 
+        
     # Fit model
     print("[INFO]: Model training")
     H = model.fit(train_generator.flow(X_train, y_train, batch_size=batch_size_train, subset='training'), 
