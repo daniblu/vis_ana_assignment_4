@@ -6,30 +6,15 @@ import argparse
 import tensorflow as tf
 
 # data loading
-from utils import (load_style_img, crop_resize, get_relpaths, plot_imgs, plot_history)
-import matplotlib.pyplot as plt
+from utils import (load_style_img, crop_resize, build_model, get_relpaths, plot_imgs, plot_history)
+from tensorflow.keras.utils import load_img
 
 # image processsing
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications.vgg16 import preprocess_input
 
 # style transfer model
 import tensorflow_hub as hub
-
-# VGG16 model
-from tensorflow.keras.applications.vgg16 import (preprocess_input,
-                                                 VGG16)
-
-# layers
-from tensorflow.keras.layers import (Flatten, 
-                                     Dense, 
-                                     BatchNormalization)
-
-# generic model object
-from tensorflow.keras.models import Model
-
-# optimizers
-from tensorflow.keras.optimizers.schedules import ExponentialDecay
-from tensorflow.keras.optimizers import SGD
 
 #scikit-learn
 from sklearn.preprocessing import LabelBinarizer
@@ -54,14 +39,14 @@ def main(style, flip_shift):
     test_cat_paths = get_relpaths(sub="test_set", subsub="cats")
     test_dog_paths = get_relpaths(sub="test_set", subsub="dogs")
 
-    X_train_cat = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in train_cat_paths])
-    X_train_dog = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in train_dog_paths])
-    X_test_cat = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in test_cat_paths])
-    X_test_dog = np.array([np.array(crop_resize(plt.imread(fname), image_size=(224, 224))) for fname in test_dog_paths])
+    X_train_cat = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in train_cat_paths])
+    X_train_dog = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in train_dog_paths])
+    X_test_cat = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in test_cat_paths])
+    X_test_dog = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in test_dog_paths])
 
     # Concatenate arrays
-    X_train = np.concatenate(X_train_cat, X_train_dog)
-    X_test = np.concatenate(X_test_cat, X_test_dog)
+    X_train = np.concatenate([X_train_cat, X_train_dog])
+    X_test = np.concatenate([X_test_cat, X_test_dog])
 
     # Normalize
     X_train = X_train.astype(np.float32) / 255.
@@ -97,7 +82,7 @@ def main(style, flip_shift):
         stylized_X_train = np.array(outputs[0])
 
         # Combine
-        X_train = np.concatenate((X_train, stylized_X_train))
+        X_train = np.concatenate([X_train, stylized_X_train])
         y_train = y_train + y_train
 
         # Save figure of style transfer examples
@@ -123,39 +108,8 @@ def main(style, flip_shift):
     test_generator = ImageDataGenerator(preprocessing_function=preprocess_input)
     test_generator.fit(X_test)
 
-    # Load model without classifier layers
-    model = VGG16(include_top=False, 
-                pooling='avg')
-
-    # Mark loaded layers as not trainable
-    for layer in model.layers:
-        layer.trainable = False
-        
-    # Add new classifier layers
-    flat1 = Flatten()(model.layers[-1].output)
-    bn = BatchNormalization()(flat1)
-    class1 = Dense(128, 
-                activation='relu')(bn)
-    class2 = Dense(64, 
-                activation='relu')(class1)
-    output = Dense(1, 
-                activation='sigmoid')(class2)
-
-    # Define new model
-    model = Model(inputs=model.inputs, 
-                outputs=output)
-
-    # Define optimizer
-    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-        initial_learning_rate=0.01,
-        decay_steps=10000,
-        decay_rate=0.9)
-    sgd = SGD(learning_rate=lr_schedule)
-
-    # Compile
-    model.compile(optimizer=sgd,
-                loss='binary_crossentropy',
-                metrics=['accuracy'])
+    # Build model
+    model = build_model()
     
     # Define appropriate batch sizes
     if flip_shift:

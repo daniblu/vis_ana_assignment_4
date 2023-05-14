@@ -1,9 +1,20 @@
-# @title Define image loading and visualization functions  { display-mode: "form" }
 import functools, os
 from matplotlib import gridspec
 import matplotlib.pylab as plt
 import tensorflow as tf
 import numpy as np
+# VGG16 model
+from tensorflow.keras.applications.vgg16 import (preprocess_input,
+                                                 VGG16)
+# layers
+from tensorflow.keras.layers import (Flatten, 
+                                     Dense, 
+                                     BatchNormalization)
+# generic model object
+from tensorflow.keras.models import Model
+# optimizers
+from tensorflow.keras.optimizers.schedules import ExponentialDecay
+from tensorflow.keras.optimizers import SGD                                                                                      
 
 def crop_resize(image, image_size=(256, 256)):
   """Returns a cropped square image."""
@@ -36,6 +47,45 @@ def get_relpaths(sub="training_set", subsub="cats"):
   relpaths = [os.path.relpath(os.path.join(dir, file)) for file in files]
    
   return relpaths
+
+# Model creation function
+def build_model():
+
+  # Load model without classifier layers
+  model = VGG16(include_top=False, 
+              pooling='avg')
+
+  # Mark loaded layers as not trainable
+  for layer in model.layers:
+      layer.trainable = False
+      
+  # Add new classifier layers
+  flat1 = Flatten()(model.layers[-1].output)
+  bn = BatchNormalization()(flat1)
+  class1 = Dense(128, 
+              activation='relu')(bn)
+  class2 = Dense(64, 
+              activation='relu')(class1)
+  output = Dense(1, 
+              activation='sigmoid')(class2)
+
+  # Define new model
+  model = Model(inputs=model.inputs, 
+              outputs=output)
+
+  # Define optimizer
+  lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+      initial_learning_rate=0.01,
+      decay_steps=10000,
+      decay_rate=0.9)
+  sgd = SGD(learning_rate=lr_schedule)
+
+  # Compile
+  model.compile(optimizer=sgd,
+              loss='binary_crossentropy',
+              metrics=['accuracy'])
+  
+  return model
 
 # image plotting function
 def plot_imgs(images, fname):

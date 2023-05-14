@@ -1,6 +1,10 @@
 # The dev file
 /src/dev.ipynb
 
+# The data
+/in/dataset
+/in/archive.zip
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
