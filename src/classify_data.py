@@ -4,6 +4,7 @@ import os
 import numpy as np
 import argparse
 import tensorflow as tf
+from tqdm import tqdm
 
 # data loading
 from utils import (load_style_img, crop_resize, build_model, get_relpaths, plot_imgs, plot_history)
@@ -48,6 +49,7 @@ def main(style, flip_shift):
     # Concatenate arrays
     X_train = np.concatenate([X_train_cat, X_train_dog])
     X_test = np.concatenate([X_test_cat, X_test_dog])
+    del X_train_cat, X_train_dog, X_test_cat, X_test_dog
 
     # Normalize
     X_train = X_train.astype(np.float32) / 255.
@@ -75,12 +77,23 @@ def main(style, flip_shift):
         hub_handle = 'https://tfhub.dev/google/magenta/arbitrary-image-stylization-v1-256/2'
         hub_module = hub.load(hub_handle)
 
-        # Generate stylized images
+        # Generate stylized images in batches to not overload memory
         print("[INFO]: Generating stylized images")
-        outputs = hub_module(X_train_t, style_img)
+        batch_size_stylize = 100 
+
+        num_samples = len(X_train_t)
+        num_batches = num_samples // batch_size_stylize
+
+        stylized_X_train = []
+        for i in tqdm(range(num_batches)):
+            start = i * batch_size_stylize
+            end = start + batch_size_stylize
+            batch = X_train_t[start:end]
+            outputs = hub_module(batch, style_img)
+            stylized_X_train.extend(outputs[0])
 
         # Convert stylized images back to original X_train format
-        stylized_X_train = np.array(outputs[0])
+        stylized_X_train = np.array(stylized_X_train)
 
         # Combine
         X_train = np.concatenate([X_train, stylized_X_train])
