@@ -49,11 +49,18 @@ def get_relpaths(sub="training_set", subsub="cats"):
   return relpaths
 
 # Model creation function
-def build_model():
+def build_model(cifar=False):
+
+  # define input shape
+  if cifar:
+    input_shape = (32, 32, 3)
+  else:
+    input_shape = (224, 224, 3)
 
   # Load model without classifier layers
   model = VGG16(include_top=False, 
-              pooling='avg')
+              pooling='avg',
+              input_shape=input_shape)
 
   # Mark loaded layers as not trainable
   for layer in model.layers:

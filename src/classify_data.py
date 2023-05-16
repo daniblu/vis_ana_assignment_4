@@ -41,15 +41,14 @@ def main(style, flip_shift):
     test_cat_paths = get_relpaths(sub="test_set", subsub="cats")
     test_dog_paths = get_relpaths(sub="test_set", subsub="dogs")
 
-    X_train_cat = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in train_cat_paths])
-    X_train_dog = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in train_dog_paths])
-    X_test_cat = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in test_cat_paths])
-    X_test_dog = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in test_dog_paths])
+    X_train_cat = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in tqdm(train_cat_paths)])
+    X_train_dog = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in tqdm(train_dog_paths)])
+    X_test_cat = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in tqdm(test_cat_paths)])
+    X_test_dog = np.array([np.array(load_img(fname, target_size=(224, 224))) for fname in tqdm(test_dog_paths)])
 
     # Concatenate arrays
     X_train = np.concatenate([X_train_cat, X_train_dog])
     X_test = np.concatenate([X_test_cat, X_test_dog])
-    del X_train_cat, X_train_dog, X_test_cat, X_test_dog
 
     # Normalize
     X_train = X_train.astype(np.float32) / 255.
@@ -58,6 +57,8 @@ def main(style, flip_shift):
     # Make y labels, cat = 0, dog = 1
     y_train = [0 for n in range(len(X_train_cat))] + [1 for n in range(len(X_train_dog))]
     y_test = [0 for n in range(len(X_test_cat))] + [1 for n in range(len(X_test_dog))]
+
+    del X_train_cat, X_train_dog, X_test_cat, X_test_dog
 
     if style != None:
 

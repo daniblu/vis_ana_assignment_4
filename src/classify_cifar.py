@@ -104,7 +104,7 @@ def main(style, flip_shift):
     test_generator.fit(X_test)
 
     # Build model
-    model = build_model()
+    model = build_model(cifar=True)
 
     # Define appropriate batch sizes
     if style != None:
