@@ -18,6 +18,7 @@ import tensorflow_hub as hub
 
 #scikit-learn
 from sklearn.preprocessing import LabelBinarizer
+from sklearn.utils import shuffle
 from sklearn.metrics import classification_report
 
 # terminal parsing function
@@ -87,6 +88,10 @@ def main(style, flip_shift):
     y_train = lb.fit_transform(y_train)
     y_test = lb.fit_transform(y_test)
     
+    # Shuffle data
+    X_train, y_train = shuffle(X_train, y_train)
+    X_test, y_test = shuffle(X_test, y_test)
+
     # Define image data generators
     if flip_shift:
         train_generator = ImageDataGenerator(horizontal_flip=True,
