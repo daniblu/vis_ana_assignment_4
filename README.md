@@ -33,7 +33,7 @@ Running the model on the CIFAR-10 dataset for each condition results in the foll
 |Flip-shift|0.63|
 |Style transfer|0.63|
 
-Looking at the example of a stylized image below, we see that the style transfer is not that successful for CIFAR-10 images, since they are quite small (32x32), making it difficult to recognize the contents of the image.
+Looking at the example of a stylized image below, we see that the style transfer is not that successful for CIFAR-10 images since they are quite small (32x32), making it difficult to recognize the contents of the image.
 
 ![](out/cifar_snow_cat.png)
 
