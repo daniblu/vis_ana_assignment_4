@@ -23,7 +23,7 @@ Note, this means that the two models taking augmented images as input, train on 
 - __classify_data.py__: Identical to above, but trains on the data collected from kaggle.
 
 ## Results
-Running the model on the cifar-10 dataset for each condition results in following accuracies. No augmentation method managed to improve the model compared to training on the original data only. 
+Running the model on the cifar-10 dataset for each condition results in following accuracies. No augmentation method managed to improve the model compared to training on the original data only. CONSIDER CURVES.
 
 |Augmentation|Overall accuracy|
 |---|---|
@@ -31,6 +31,31 @@ Running the model on the cifar-10 dataset for each condition results in followin
 |Flip-shift|0.63|
 |Style transfer|0.62|
 
-this repo is not a finished test but allows for testing.
+Looking at the example of a stylized image below, we see that the style transfer is not that successful for Cifar-10 images, since they are quite small (32x32), making it difficult to recognize the contents of the image.
+
+![](out/cifar_snow_cat.png)
+
+Therefore, the pipeline is repeated for the other dataset containing larger images. The accuracies are seen in the table below.
+
+|Augmentation|Overall accuracy|
+|---|---|
+|None|0.64|
+|Flip-shift|0.63|
+|Style transfer|0.62|
+
+GENERALLY LOW ACCURACIES. this repo is not a finished test but allows for testing.
 
 ## Setup
+Dowload the data from kaggle and place it in ``in``. Remember to unzip the downloaded folder and do not change the organization of the unzipped folder. Place any style image within the folder ``styles``. The folder already contains ``snow.png``. It does not need to be a ``.png``-file.
+
+The scripts require the following to be run from the terminal:
+
+```shell
+bash setup.sh
+```
+
+This will create a virtual environment, ```assignment4_env``` (git ignored), to which the packages listed in ```requirements.txt``` will be downloaded. __Note__, ```setup.sh``` works only on computers running POSIX. Remember to activate the environment running the following line in a terminal before changing the working directory to ```src``` and running the scripts.
+
+```shell 
+source ./assignment4_env/bin/activate
+```
