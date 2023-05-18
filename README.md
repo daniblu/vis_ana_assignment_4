@@ -20,7 +20,7 @@ All code written for this assignment is within ``src``. Here follows a descripti
 
 - __classify_data.py__: Identical to above, but trains on the data collected from kaggle.
 
-__\*__ Note, this means that the two models taking augmented images as input, train on different data sizes. In the classic augmentation condition, for each epoch, the model sees the same amount of data as the size of the original dataset. However in each epoch, the data will be augmented differently. In the style transfer condition, the dataset is twice the size of the original dataset (there is one stylized version of each original image). This imbalance is inevitable if one is to follow the standard workflow of training on classifcally augmented image data (i.e., using an image data generator and a flow method). There is not an obvious way in which this workflow can be applied to the case of style transfer augmentation. To acommodate the fact that twice as much data was seen in each epoch in the style transfer condition, batch sizes were adjusted so that weights were updated an equal number of times for each model training.
+__\*__ Note, this means that the two models taking augmented images as input, train on different data sizes. In the classic augmentation condition, for each epoch, the model sees the same amount of data as the size of the original dataset. However in each epoch, the data will be augmented differently. In the style transfer condition, the dataset is twice the size of the original dataset (there is one stylized version of each original image). This imbalance is inevitable if one is to follow the standard workflow of training on classically augmented image data (i.e., using an image data generator and a flow method). There is not an obvious way in which this workflow can be applied to the case of style transfer augmentation. To accommodate the fact that twice as much data is seen in each epoch in the style transfer condition, batch sizes were adjusted so that weights were updated an equal number of times for each model training.
 
 ## Results
 The reader may look in the ``build_model``-function in ``utils.py`` for specifications on the model. The style chosen for this investigation was the best performing style image in Zheng et al., that is an image of a snow landscape. This was possibly the best style, beacuse it does not result in images that are too unnaturalistic with noisy elements of the style image added. One could argue that the resulting snow-stylized images resemble naturally ocurring overexposed images. 
@@ -39,13 +39,13 @@ Looking at the example of a stylized image below, we see that the style transfer
 
 Therefore, the pipeline is repeated for the other dataset containing larger images. The accuracies are seen in the table below. Despite the style transfer not being as destructive for the content image, it does not change the pattern of accuracies.
 
+![](out/snow_dog.png)
+
 |Augmentation|Overall accuracy|
 |---|---|
 |None|0.64|
 |Flip-shift|0.63|
 |Style transfer|0.62|
-
-![](out/snow_dog.png)
 
 Overall, it seems that for this particular classification task and style image, using image style transfer as an augmentation method did not improve classification accuracy. However, one should note that the accuracies are generally low. All models were only trained for 10 epochs and the learning curves (see ``png``-files in ``models``) generally suggest that there is room for improvement if the models were trained for a longer time. Maybe the model training on augmented images will outperform the simple data model with more epochs. Alternatively, the generally low accuracies could maybe be increased by altering the structure of the fully-connected network. In conclusion, this small-scale investigation does not suggest that image style transfer is a useful data augmentation method, but this does not generalize to all classification situations. Many variables can be changed, e.g., dataset, style image, and model architecture. This repository may be useful for further testing.
 
